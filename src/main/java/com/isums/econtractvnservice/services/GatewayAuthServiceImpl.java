@@ -11,11 +11,12 @@ import org.springframework.util.StringUtils;
 @RequiredArgsConstructor
 public class GatewayAuthServiceImpl implements GatewayAuthService {
 
-    private final GatewayProperties properties;
+    private final GatewayProperties gatewayProperties;
 
     @Override
-    public void validateInternalToken(String requestToken) {
-        if (!StringUtils.hasText(requestToken) || !properties.getInternalToken().equals(requestToken)) {
+    public void validateInternalToken(String internalToken) {
+        if (!StringUtils.hasText(internalToken)
+                || !gatewayProperties.getInternalToken().equals(internalToken)) {
             throw new UnauthorizedException("Unauthorized");
         }
     }
