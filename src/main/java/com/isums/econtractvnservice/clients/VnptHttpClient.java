@@ -16,7 +16,12 @@ public class VnptHttpClient {
     private final RestTemplate vnptRestTemplate;
     private final GatewayProperties properties;
 
-    public ResponseEntity<String> forward(String path, HttpMethod method, String body, Map<String, String> requestHeaders) {
+    public ResponseEntity<String> forward(
+            String path,
+            HttpMethod method,
+            String body,
+            Map<String, String> requestHeaders
+    ) {
         String normalizedPath = path.startsWith("/") ? path : "/" + path;
         String url = properties.getVnptBaseUrl() + normalizedPath;
 
@@ -33,6 +38,12 @@ public class VnptHttpClient {
         if (headers.getFirst(HttpHeaders.CONTENT_TYPE) == null && body != null && !body.isBlank()) {
             headers.setContentType(MediaType.APPLICATION_JSON);
         }
+
+        System.out.println("=== VNPT HTTP CLIENT ===");
+        System.out.println("URL: " + url);
+        System.out.println("Method: " + method);
+        System.out.println("Headers: " + headers);
+        System.out.println("Body: " + body);
 
         HttpEntity<String> entity = new HttpEntity<>(body, headers);
         return vnptRestTemplate.exchange(url, method, entity, String.class);
