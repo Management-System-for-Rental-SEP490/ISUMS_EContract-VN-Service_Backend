@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
+import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -105,14 +106,8 @@ public class VnptHttpClient {
         return vnptRestTemplate.exchange(url, method, entity, String.class);
     }
 
-    public ResponseEntity<byte[]> forwardBinary(
-            String path,
-            HttpMethod method,
-            Map<String, String> requestHeaders
+    public ResponseEntity<byte[]> forwardBinary(String downloadUrl, Map<String, String> requestHeaders
     ) {
-        String normalizedPath = path.startsWith("/") ? path : "/" + path;
-        String url = path.startsWith("http") ? path : properties.getVnptBaseUrl() + normalizedPath;
-
         HttpHeaders headers = new HttpHeaders();
         if (requestHeaders != null) {
             requestHeaders.forEach((k, v) -> {
@@ -123,9 +118,16 @@ public class VnptHttpClient {
         }
         headers.setAccept(List.of(MediaType.APPLICATION_PDF, MediaType.APPLICATION_OCTET_STREAM));
 
-        log.info("[Gateway] forwardBinary url={} method={}", url, method);
+        log.info("[Gateway] forwardBinary downloading from={}", downloadUrl);
 
         HttpEntity<Void> entity = new HttpEntity<>(headers);
-        return vnptRestTemplate.exchange(url, method, entity, byte[].class);
+
+        try {
+            return vnptRestTemplate.exchange(downloadUrl, HttpMethod.GET, entity, byte[].class);
+        } catch (RestClientResponseException ex) {
+            log.error("[Gateway] VNPT download failed status={} url={}", ex.getStatusCode(), downloadUrl);
+            log.error("[Gateway] VNPT response body={}", ex.getResponseBodyAsString());
+            throw ex;
+        }
     }
 }

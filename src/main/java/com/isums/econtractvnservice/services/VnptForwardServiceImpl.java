@@ -112,34 +112,32 @@ public class VnptForwardServiceImpl implements VnptForwardService {
 
     @Override
     public ResponseEntity<byte[]> forwardBinary(ForwardRequest request) {
-        if (!StringUtils.hasText(request.getPath()) || !StringUtils.hasText(request.getMethod())) {
-            throw new BadRequestException("Path and method are required");
-        }
-
-        HttpMethod method;
-        try {
-            method = HttpMethod.valueOf(request.getMethod().toUpperCase(Locale.ROOT));
-        } catch (IllegalArgumentException ex) {
-            throw new BadRequestException("Invalid method");
+        if (!StringUtils.hasText(request.getPath())) {
+            throw new BadRequestException("path (downloadUrl) is required");
         }
 
         try {
             ResponseEntity<byte[]> response = vnptHttpClient.forwardBinary(
                     request.getPath(),
-                    method,
                     request.getHeaders()
             );
 
-            HttpHeaders responseHeaders = new HttpHeaders();
-            responseHeaders.setContentType(MediaType.APPLICATION_PDF);
+            if (response.getBody() == null || response.getBody().length == 0) {
+                log.error("[Gateway] VNPT returned empty PDF body url={}", request.getPath());
+                return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
+            }
 
-            return new ResponseEntity<>(response.getBody(), responseHeaders, response.getStatusCode());
+            log.info("[Gateway] PDF downloaded size={}KB", response.getBody().length / 1024);
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .body(response.getBody());
 
         } catch (RestClientResponseException ex) {
-            log.error("[Gateway] forwardBinary failed status={} path={}", ex.getStatusCode(), request.getPath());
+            log.error("[Gateway] forwardBinary failed status={} url={}", ex.getStatusCode(), request.getPath());
             return ResponseEntity.status(ex.getStatusCode()).build();
         } catch (Exception ex) {
-            log.error("[Gateway] forwardBinary error path={}", request.getPath(), ex);
+            log.error("[Gateway] forwardBinary error url={}", request.getPath(), ex);
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
         }
     }
