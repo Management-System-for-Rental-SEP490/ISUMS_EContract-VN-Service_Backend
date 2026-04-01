@@ -25,24 +25,26 @@ public class VnptForwardController {
     private final ObjectMapper objectMapper;
 
     @PostMapping("/forward")
-    public ResponseEntity<?> forward(
-            @RequestHeader("X-Internal-Token") String internalToken,
-            @Valid @RequestBody ForwardRequest request
+    public ResponseEntity<?> forward(@RequestHeader("X-Internal-Token") String internalToken, @Valid @RequestBody ForwardRequest request
     ) {
         gatewayAuthService.validateInternalToken(internalToken);
         return vnptForwardService.forward(request);
     }
 
     @PostMapping("/forward-multipart")
-    public ResponseEntity<?> forwardMultipart(
-            @RequestHeader("X-Internal-Token") String internalToken,
-            @RequestPart("metadata") String metadata,
-            @RequestPart(value = "file", required = false) MultipartFile file
+    public ResponseEntity<?> forwardMultipart(@RequestHeader("X-Internal-Token") String internalToken, @RequestPart("metadata") String metadata,
+                                              @RequestPart(value = "file", required = false) MultipartFile file
     ) throws Exception {
         gatewayAuthService.validateInternalToken(internalToken);
 
         MultipartForwardRequest request = objectMapper.readValue(metadata, MultipartForwardRequest.class);
         return vnptForwardService.forwardMultipart(request, file);
+    }
+
+    @PostMapping("/forward-binary")
+    public ResponseEntity<byte[]> forwardBinary(@RequestHeader("X-Internal-Token") String token, @RequestBody ForwardRequest request) {
+        gatewayAuthService.validateInternalToken(token);
+        return vnptForwardService.forwardBinary(request);
     }
 
     @PostMapping("/test-post")
