@@ -13,6 +13,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -102,5 +103,29 @@ public class VnptHttpClient {
 
         HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(parts, headers);
         return vnptRestTemplate.exchange(url, method, entity, String.class);
+    }
+
+    public ResponseEntity<byte[]> forwardBinary(
+            String path,
+            HttpMethod method,
+            Map<String, String> requestHeaders
+    ) {
+        String normalizedPath = path.startsWith("/") ? path : "/" + path;
+        String url = path.startsWith("http") ? path : properties.getVnptBaseUrl() + normalizedPath;
+
+        HttpHeaders headers = new HttpHeaders();
+        if (requestHeaders != null) {
+            requestHeaders.forEach((k, v) -> {
+                if (StringUtils.hasText(k) && StringUtils.hasText(v)) {
+                    headers.add(k, v);
+                }
+            });
+        }
+        headers.setAccept(List.of(MediaType.APPLICATION_PDF, MediaType.APPLICATION_OCTET_STREAM));
+
+        log.info("[Gateway] forwardBinary url={} method={}", url, method);
+
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+        return vnptRestTemplate.exchange(url, method, entity, byte[].class);
     }
 }

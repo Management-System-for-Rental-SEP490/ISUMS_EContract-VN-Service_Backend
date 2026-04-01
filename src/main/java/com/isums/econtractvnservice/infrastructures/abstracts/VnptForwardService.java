@@ -9,4 +9,7 @@ public interface VnptForwardService {
     ResponseEntity<?> forward(ForwardRequest request);
 
     ResponseEntity<?> forwardMultipart(MultipartForwardRequest request, MultipartFile file);
+
+    ResponseEntity<byte[]> forwardBinary(ForwardRequest request);
+
 }
