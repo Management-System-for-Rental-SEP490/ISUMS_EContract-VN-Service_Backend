@@ -15,13 +15,25 @@ import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Locale;
+import java.util.Set;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class VnptForwardServiceImpl implements VnptForwardService {
 
+    private static final Set<String> ALLOWED_METHODS =
+            Set.of("GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS");
+
     private final VnptHttpClient vnptHttpClient;
+
+    private HttpMethod parseMethod(String raw) {
+        String upper = raw.toUpperCase(Locale.ROOT);
+        if (!ALLOWED_METHODS.contains(upper)) {
+            throw new BadRequestException("Invalid method");
+        }
+        return HttpMethod.valueOf(upper);
+    }
 
     @Override
     public ResponseEntity<?> forward(ForwardRequest request) {
@@ -29,12 +41,7 @@ public class VnptForwardServiceImpl implements VnptForwardService {
             throw new BadRequestException("Path and method are required");
         }
 
-        HttpMethod method;
-        try {
-            method = HttpMethod.valueOf(request.getMethod().toUpperCase(Locale.ROOT));
-        } catch (IllegalArgumentException ex) {
-            throw new BadRequestException("Invalid method");
-        }
+        HttpMethod method = parseMethod(request.getMethod());
 
         try {
             ResponseEntity<String> response = vnptHttpClient.forward(
@@ -72,12 +79,7 @@ public class VnptForwardServiceImpl implements VnptForwardService {
             throw new BadRequestException("Path and method are required");
         }
 
-        HttpMethod method;
-        try {
-            method = HttpMethod.valueOf(request.getMethod().toUpperCase(Locale.ROOT));
-        } catch (IllegalArgumentException ex) {
-            throw new BadRequestException("Invalid method");
-        }
+        HttpMethod method = parseMethod(request.getMethod());
 
         try {
             ResponseEntity<String> response = vnptHttpClient.forwardMultipart(

@@ -7,6 +7,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+
 @Service
 @RequiredArgsConstructor
 public class GatewayAuthServiceImpl implements GatewayAuthService {
@@ -15,8 +18,12 @@ public class GatewayAuthServiceImpl implements GatewayAuthService {
 
     @Override
     public void validateInternalToken(String internalToken) {
+        String expected = gatewayProperties.getInternalToken();
         if (!StringUtils.hasText(internalToken)
-                || !gatewayProperties.getInternalToken().equals(internalToken)) {
+                || !StringUtils.hasText(expected)
+                || !MessageDigest.isEqual(
+                        internalToken.getBytes(StandardCharsets.UTF_8),
+                        expected.getBytes(StandardCharsets.UTF_8))) {
             throw new UnauthorizedException("Unauthorized");
         }
     }
