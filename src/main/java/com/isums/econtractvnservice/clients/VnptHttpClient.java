@@ -14,6 +14,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
@@ -123,7 +124,12 @@ public class VnptHttpClient {
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
         try {
-            return vnptRestTemplate.exchange(downloadUrl, HttpMethod.GET, entity, byte[].class);
+            return vnptRestTemplate.exchange(
+                    URI.create(downloadUrl),
+                    HttpMethod.GET,
+                    entity,
+                    byte[].class
+            );
         } catch (RestClientResponseException ex) {
             log.error("[Gateway] VNPT download failed status={} url={}", ex.getStatusCode(), downloadUrl);
             log.error("[Gateway] VNPT response body={}", ex.getResponseBodyAsString());
