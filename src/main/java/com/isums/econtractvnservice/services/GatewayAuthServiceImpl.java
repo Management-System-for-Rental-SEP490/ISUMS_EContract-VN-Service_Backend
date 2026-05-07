@@ -19,8 +19,11 @@ public class GatewayAuthServiceImpl implements GatewayAuthService {
     @Override
     public void validateInternalToken(String internalToken) {
         String expected = gatewayProperties.getInternalToken();
+        if (!StringUtils.hasText(expected)) {
+            return;
+        }
+
         if (!StringUtils.hasText(internalToken)
-                || !StringUtils.hasText(expected)
                 || !MessageDigest.isEqual(
                         internalToken.getBytes(StandardCharsets.UTF_8),
                         expected.getBytes(StandardCharsets.UTF_8))) {

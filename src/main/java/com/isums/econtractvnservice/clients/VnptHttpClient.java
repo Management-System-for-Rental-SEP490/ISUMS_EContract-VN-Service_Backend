@@ -123,7 +123,15 @@ public class VnptHttpClient {
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
         try {
-            return vnptRestTemplate.exchange(downloadUrl, HttpMethod.GET, entity, byte[].class);
+            // Pass URI directly so RestTemplate does NOT treat the string
+            // as a template and re-encode already-encoded characters. The
+            // VNPT download token is Base64 so contains + (encoded as
+            // %2B in the URL). RestTemplate.exchange(String,...) was
+            // re-encoding %2B to %252B, which VNPT decoded back to
+            // literal %2B (not +), corrupting the Base64 → HTTP 500
+            // "not a valid Base-64 string".
+            java.net.URI uri = java.net.URI.create(downloadUrl);
+            return vnptRestTemplate.exchange(uri, HttpMethod.GET, entity, byte[].class);
         } catch (RestClientResponseException ex) {
             log.error("[Gateway] VNPT download failed status={} url={}", ex.getStatusCode(), downloadUrl);
             log.error("[Gateway] VNPT response body={}", ex.getResponseBodyAsString());

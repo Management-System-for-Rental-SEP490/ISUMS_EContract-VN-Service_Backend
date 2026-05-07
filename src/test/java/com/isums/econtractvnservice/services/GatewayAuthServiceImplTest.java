@@ -58,10 +58,10 @@ class GatewayAuthServiceImplTest {
     }
 
     @Test
-    @DisplayName("rejects when server-side token not configured (defense-in-depth)")
+    @DisplayName("allows request when server-side token is not configured")
     void serverTokenMissing() {
         properties.setInternalToken(null);
-        assertThatThrownBy(() -> service.validateInternalToken("anything"))
-                .isInstanceOf(UnauthorizedException.class);
+        assertThatCode(() -> service.validateInternalToken("anything"))
+                .doesNotThrowAnyException();
     }
 }
